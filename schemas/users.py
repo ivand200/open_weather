@@ -21,8 +21,28 @@ class UserCreate(UserBase):
         return value
 
 
+class ItemBase(BaseModel):
+    title: str
+    user_id: int
+
+
+class ItemCreate(ItemBase):
+    pass
+
+class ItemPublic(ItemBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
 class UserPublic(UserBase):
     id: int
 
     class Config:
         orm_mode = True
+
+
+class UserItems(BaseModel):
+    user: Optional[UserPublic]
+    items: Optional[List[ItemPublic]]
