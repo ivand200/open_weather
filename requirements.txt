@@ -1,0 +1,10 @@
+fastapi[all]==0.75.0
+uvicorn[standard]==0.15.0
+SQLAlchemy==1.4.34
+pydantic==1.9.0
+alembic==1.7.7
+psycopg2-binary==2.9.3 
+
+black==22.3.0
+pytest==7.1.2
+flake8==4.0.1
