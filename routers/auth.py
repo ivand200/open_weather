@@ -27,3 +27,13 @@ def decodeJWT(token: str):
         return decoded_token if decoded_token["expires"] >= time.time() else False
     except:
         return False
+
+
+def transferJWT(user_id: str) -> str:
+    payload = {
+        "user_id": user_id,
+        "expires": time.time() + 300
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    return token
