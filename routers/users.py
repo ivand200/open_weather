@@ -1,5 +1,6 @@
 import time
-import urllib
+import logging
+import sys
 
 from fastapi import APIRouter, Body, status, Depends, HTTPException, Header, Body
 from sqlalchemy.orm import Session
@@ -14,6 +15,15 @@ from routers.auth import signJWT, decodeJWT, transferJWT
 from db import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler =logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 router = APIRouter()
 
@@ -34,6 +44,7 @@ def check_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/test")
 def test():
+    logger.info("Check")
     return "Hello"
 
 
@@ -44,6 +55,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     login: str
     password: str
     """
+    logger.info(f"Registration a user with login: {user.login}")
     user_db = db.query(User).filter(User.login == user.login).first()
     if user_db:
         raise HTTPException(status_code=400, detail="login already exist.")
@@ -61,6 +73,7 @@ async def user_login(user: UserCreate, db: Session = Depends(get_db)):
     """
     User login
     """
+    logging.info(f"Login user: {user.login}")
     if check_user(user, db):
         return signJWT(user.login)
     raise HTTPException(status_code=403, detail="Unauthorized")
@@ -86,8 +99,8 @@ async def create_item(
     """
     Create Item
     """
+    logging.info(f"Create a item: {item}")
     token = decodeJWT(Authorization)
-    print(token)
     if not token:
         raise HTTPException(status_code=401, detail="Acces denied")
     new_item = Item(title=item.title, user_id=item.user_id)
@@ -106,6 +119,7 @@ async def delete_item(
     """
     Delete users item by id
     """
+    logger.info(f"Delete item: {id}")
     token = decodeJWT(Authorization)
     if not token:
         raise HTTPException(status_code=401, detail="Acces denied")
@@ -113,6 +127,7 @@ async def delete_item(
     user = db.query(User).filter(User.login == token["user_id"]).first()
     if item.user_id != user.id:
         raise HTTPException(status_code=400, detail=f"Cant find item id: {id}")
+    logger.info(f"Delete item with item.user_id: {item.user_id}, user.id: {user.id}")
     db.delete(item)
     db.commit()
     return "ok"
@@ -131,6 +146,7 @@ async def get_items(
         raise HTTPException(status_code=401, detail="Acces denied")
     user = db.query(User).filter(User.login == token["user_id"]).first()
     items = db.query(Item).filter(Item.user_id == user.id).all()
+    logging.info(f"Get all items, user: {user.login}, items: {len(items)}")
     result = UserItems(user=user, items=items)
     return result
 
@@ -152,6 +168,7 @@ async def link_item(
     item = db.query(Item).filter(Item.id == item_id).first()
     if item.user_id != user.id:
         raise HTTPException(status_code=400, detail=f"Cant find item id: {id}")
+    logging.info(f"Send item transfer from user: {user.login}, item: {item.id}")
     user_login_jwt = transferJWT(user_login)
     user_token = user_login_jwt.decode("utf-8")
     url = f"{config('backend_url')}/{user_token}/{item_id}"
@@ -171,6 +188,7 @@ async def get_transfer(
     token = decodeJWT(Authorization)
     if not token:
         raise HTTPException(status_code=401, detail="Acces denied")
+    logging.info(f"Get item transfer, item: {item_id}, user: {token['user_id']}")
     user = db.query(User).filter(User.login == token["user_id"]).first()
     check_user_token = decodeJWT(user_token)
     if not check_user or check_user_token["user_id"] != user.login:
