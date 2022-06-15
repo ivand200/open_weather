@@ -13,9 +13,10 @@ from schemas.users import UserCreate, UserPublic, ItemCreate, ItemPublic, UserIt
 from models.users import User, Item
 from routers.auth import signJWT, decodeJWT, transferJWT
 from db import get_db
+from settings import Settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+settings = Settings()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -171,7 +172,7 @@ async def link_item(
     logging.info(f"Send item transfer from user: {user.login}, item: {item.id}")
     user_login_jwt = transferJWT(user_login)
     user_token = user_login_jwt.decode("utf-8")
-    url = f"{config('backend_url')}/{user_token}/{item_id}"
+    url = f"{settings.backend_url}/{user_token}/{item_id}"
     return url
 
 
