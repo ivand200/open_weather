@@ -6,6 +6,7 @@ from decouple import config
 from settings import Settings
 
 settings = Settings()
+
 SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.database_name}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database}"
 # SQLALCHEMY_DATABASE_URL = f"postgresql://{config('name')}:{config('password')}@{config('host')}:{config('port')}/{config('database')}"
 
